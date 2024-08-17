@@ -1,5 +1,6 @@
 """Jenkins commands which involve YAML parsing"""
 import asyncio
+import copy
 import logging
 import sys
 from abc import ABC
@@ -43,7 +44,6 @@ class YamlCommands(ABC):
         failed_jobs = []
         with open(build_jobs_yaml, 'r', encoding='utf-8') as yaml_file_contents:
             build_jobs_dict = yaml.safe_load(yaml_file_contents)
-            remaining_builds_dict = build_jobs_dict
             for build_host_index in range(len(build_jobs_dict[BUILD][HOSTS])):
                 build_host = build_jobs_dict[BUILD][HOSTS][build_host_index]
                 jobs_info_dict = process_build_host(build_host)
@@ -54,20 +54,22 @@ class YamlCommands(ABC):
         logging.debug('Successful builds: %s', jobs_info_dict[SUCCESSFUL_JOBS])
         tracking_output_filename = build_jobs_yaml.replace('.yaml', '-tracking.yaml')
         logging.info('Writing build numbers to track to %s...', tracking_output_filename)
+        tracking_build_jobs_dict = copy.deepcopy(build_jobs_dict)
+        remaining_build_jobs_dict = copy.deepcopy(build_jobs_dict)
+        for build_host in tracking_build_jobs_dict[BUILD][HOSTS]:
+            build_host['jobs'] = list(filter(lambda job: job.get('build_index', -1) != -1, build_host['jobs']))
+        logging.info('tracking_build_jobs_dict: %s', tracking_build_jobs_dict)
         with open(tracking_output_filename, 'w', encoding='utf-8') as output_file:
-            yaml.dump(build_jobs_dict, output_file)
+            yaml.dump(tracking_build_jobs_dict, output_file)
         if len(jobs_info_dict[FAILED_JOBS]) > 0:
             logging.debug('Failed builds: %s', jobs_info_dict[FAILED_JOBS])
-            delete_count = 0
-            for successful_job in jobs_info_dict[SUCCESSFUL_JOBS]:
-                del remaining_builds_dict[BUILD][HOSTS][build_host_index]['jobs'][(
-                        successful_job['index'] - delete_count)
-                ]
-                delete_count += 1
+            for build_host_index, build_host in enumerate(remaining_build_jobs_dict[BUILD][HOSTS]):
+                failed_jobs_dict = list(filter(lambda job: job.get('build_index', -1) == -1, build_host['jobs']))
+                remaining_build_jobs_dict[BUILD][HOSTS][build_host_index]['jobs'] = failed_jobs_dict
             output_file_name = build_jobs_yaml.replace('.yaml', '-remaining.yaml')
             logging.info('Outputting remaining (failed) jobs to %s...', output_file_name)
             with open(output_file_name, 'w', encoding='utf-8') as output_file:
-                yaml.dump(remaining_builds_dict, output_file)
+                yaml.dump(remaining_build_jobs_dict, output_file)
 
     @jenkins_yaml_commands.command()
     @verbose_option
