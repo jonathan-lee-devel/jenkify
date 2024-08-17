@@ -3,7 +3,12 @@ repos:
     hooks:
       - id: pylint
         name: pylint
-        entry: pylint
+        entry: poetry run pylint jenkify
+        language: python
+        types: [python]
+      - id: pytest
+        name: pytest
+        entry: poetry run pytest tests
         language: python
         types: [python]
 -   repo: https://github.com/pre-commit/pre-commit-hooks

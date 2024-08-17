@@ -1,12 +1,17 @@
 build:
   hosts:
   - jobs:
-    - build_index: 123
+    - build-index: 126
       end: job/TestJob
-    - build_index: 96
+    - build-index: 110
+      build-parameters:
+      - name: GIT_BRANCH
+        value: staging
+      - name: DEPLOY_TO_PROD
+        value: 'false'
       end: job/AnotherTestJob
-    - build_index: 97
+    - build-index: 100
       end: job/LongRunningJob
-    - build_index: 33
+    - build-index: 37
       end: job/User_Input_Job
     url: http://localhost:8080

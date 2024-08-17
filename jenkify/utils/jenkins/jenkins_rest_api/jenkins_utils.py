@@ -1,5 +1,6 @@
 """Jenkins utilities module"""
 from collections.abc import Callable
+from urllib.parse import urlencode
 
 from requests import Response
 from typeguard import typechecked, check_type
@@ -32,6 +33,17 @@ class JenkinsUtils:
         url_end_param = url_end_param.removeprefix('/')
         url_end_param = url_end_param.removesuffix('/')
         return url_end_param
+
+    @staticmethod
+    def get_jenkins_build_params_from_yaml_list(build_params_yaml_list: list | None) -> dict | None:
+        """Process the build parameters provided in the YAML file and returns processable dict"""
+        if not build_params_yaml_list:
+            return None
+        build_params_dict: dict = {}
+        for build_param_yaml in build_params_yaml_list:
+            build_params_dict[build_param_yaml['name']] = build_param_yaml['value']
+
+        return build_params_dict
 
     @typechecked
     def get_jenkins_build_console_output(
@@ -124,12 +136,15 @@ class JenkinsUtils:
     def start_jenkins_build_url_end(
             self,
             url_end: str,
+            build_parameters: dict | None = None,
     ) -> int:
         """Kicks off a build for a specified Jenkins job based on URL ending"""
         JsonUtils.validate_max_retry(self._jenkins_request_settings.max_retry)
+        initial_url = f'{self._jenkins_request_settings.url}/{url_end}'
+        query_string = f'?{urlencode(build_parameters)}' if build_parameters else ''
         try:
             status_code = request_retry(HttpRequestMethod.POST,
-                                        f'{self._jenkins_request_settings.url}/{url_end}/build?delay=0sec',
+                                        f'{initial_url}/{'build' if query_string == '' else 'buildWithParameters'}{query_string}',
                                         self._jenkins_request_settings.max_retry,
                                         HttpRequestSettings(auth=self._jenkins_request_settings.auth)
                                         ).status_code

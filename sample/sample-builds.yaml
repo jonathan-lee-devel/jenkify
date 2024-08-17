@@ -4,6 +4,11 @@ build:
       jobs:
         - end: 'job/TestJob'
         - end: 'job/AnotherTestJob'
+          build-parameters:
+            - name: 'GIT_BRANCH'
+              value: 'staging'
+            - name: 'DEPLOY_TO_PROD'
+              value: 'false'
         - end: 'job/LongRunningJob'
         - end: 'job/User_Input_Job'
         - end: 'job/SomeOtherJob'

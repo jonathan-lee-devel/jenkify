@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from typeguard import typechecked
 
-from jenkify.constants.jenkins_yaml import JOBS, END, URL, BUILDS, SUCCESSFUL_JOBS, FAILED_JOBS
+from jenkify.constants.jenkins_yaml import JOBS, END, URL, BUILDS, SUCCESSFUL_JOBS, FAILED_JOBS, BUILD_PARAMETERS
 from jenkify.utils.jenkins.jenkins_rest_api.jenkins_utils import JenkinsUtils
 
 
@@ -23,7 +23,12 @@ def process_build_host(build_host: dict) -> dict:
                                                    key=lambda x: x['number'], reverse=True)
             if jenkins_job_pre_run_dict is not None and len(builds_sorted_by_build_number) > 0:
                 build_number_to_track = builds_sorted_by_build_number[0]['number'] + 1
-            response_status_code = jenkins_utils.start_jenkins_build_url_end(build_job_url_end)
+            response_status_code = jenkins_utils.start_jenkins_build_url_end(
+              build_job_url_end,
+              jenkins_utils.get_jenkins_build_params_from_yaml_list(
+                build_host[JOBS][build_job_index].get(BUILD_PARAMETERS, None)
+              )
+            )
             if response_status_code == HTTPStatus.CREATED:
                 logging.info(
                     'Successfully kicked off build [%s] (%s)!',
@@ -36,7 +41,7 @@ def process_build_host(build_host: dict) -> dict:
                      'index': build_job_index,
                      'build_number': build_number_to_track}
                 )
-                build_host[JOBS][build_job_index]['build_index'] = build_number_to_track
+                build_host[JOBS][build_job_index]['build-index'] = build_number_to_track
             else:
                 logging.error(
                     'Failed to kick off build [%s] (%s)!',

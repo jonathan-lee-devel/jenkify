@@ -1,4 +1,5 @@
 """Jenkins REST API CLI commands module"""
+import json
 import logging
 from abc import ABC
 from http import HTTPStatus
@@ -8,7 +9,7 @@ from typeguard import typechecked
 
 from jenkify.cli.common.options import verbose_option
 from jenkify.cli.jenkins.basic.options import (
-    job_name_option, build_number_option, url_end_option,
+  job_name_option, build_number_option, url_end_option, build_parameters_option,
 )
 from jenkify.use_cases.jenkins_job_info import JenkinsJobInfoUseCase
 from jenkify.utils.jenkins.jenkins_rest_api.jenkins_utils import JenkinsUtils
@@ -38,14 +39,16 @@ class BasicCommands(ABC):
     @jenkins_basic_commands.command()
     @verbose_option
     @url_end_option
+    @build_parameters_option
     @staticmethod
     @typechecked
-    def start_build_url(verbose: bool, url_end: str) -> None:
+    def start_build_url(verbose: bool, url_end: str, build_parameters: str | None) -> None:
         """Starts Jenkins job based on URL ending"""
         initialize_logging(verbose)
         logging.info('Kicking off build (%s)...', url_end)
         if (JenkinsUtils().start_jenkins_build_url_end(
-                JenkinsUtils.trim_url_end_option_util(url_end)
+                JenkinsUtils.trim_url_end_option_util(url_end),
+                json.loads(build_parameters) if build_parameters else None
         ) == HTTPStatus.CREATED):
             logging.info('Successfully kicked off build (%s)!', url_end)
         else:

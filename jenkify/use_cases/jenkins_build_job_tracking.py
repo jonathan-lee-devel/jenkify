@@ -26,7 +26,7 @@ def validate_jenkins_job_build_tracking_yaml(build_jobs_tracking_yaml_file_path:
             ):
                 try:
                     build_host = build_jobs_tracking_dict[BUILD][HOSTS][build_host_index]
-                    if build_host[JOBS][job_index]['build_index'] is None:
+                    if build_host[JOBS][job_index]['build-index'] is None:
                         raise KeyError('Missing build index')
                 except KeyError:
                     validation_errors.append(

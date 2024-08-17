@@ -22,7 +22,7 @@ async def update_build_jobs_tracking_dict(
             for job in host[JOBS]:
                 if (build_job_status['host'] == host[URL] and
                         build_job_status[END] == job[END] and
-                        build_job_status['build_number'] == job['build_index']):
+                        build_job_status['build_number'] == job['build-index']):
                     job['status'] = build_job_status['status'].name
 
 
@@ -36,7 +36,7 @@ async def track_multiple_build_job_statuses(build_jobs_tracking_dict: dict):
             job = build_jobs_tracking_dict[BUILD][HOSTS][host_index][JOBS][job_index]
             url_combos.append({
                 'host': host,
-                'job': {'end': job['end'], 'build_index': job['build_index']}
+                'job': {'end': job['end'], 'build-index': job['build-index']}
             })
     call_list = [poll_jenkins_job_for_desirable_status(
         JenkinsRequestSettings(url_combo['host'][URL],
@@ -44,7 +44,7 @@ async def track_multiple_build_job_statuses(build_jobs_tracking_dict: dict):
                                 os.getenv(JENKINS_TOKEN)),
                                1),
         url_combo['job']['end'],
-        url_combo['job']['build_index']
+        url_combo['job']['build-index']
     ) for url_combo in url_combos]
     statuses: list = list(await asyncio.gather(*call_list))
     await update_build_jobs_tracking_dict(statuses, build_jobs_tracking_dict)

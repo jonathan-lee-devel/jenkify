@@ -22,3 +22,10 @@ def url_end_option(func):
     """URL end command line argument"""
     return click.option('-ue', '--url-end', type=click.STRING, is_flag=False, required=True,
                         help='URL end')(func)
+
+
+@typechecked
+def build_parameters_option(func):
+    """Build parameters command line argument"""
+    return click.option('-bp', '--build-parameters', type=click.STRING, is_flag=False, required=False,
+                      help='Build parameters as raw JSON')(func)
