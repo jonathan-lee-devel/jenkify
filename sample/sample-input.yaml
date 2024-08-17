@@ -1,0 +1,12 @@
+build:
+  hosts:
+    - url: 'http://localhost:8080'
+      jobs:
+        - end: 'job/User_Input_Job'
+          user-input:
+            - id: 'userInput'
+              params:
+                - name: 'Config'
+                  value: 'Test'
+                - name: 'Test'
+                  value: 'Test'

@@ -5,6 +5,7 @@ temporarily down
 
 import logging
 import time
+
 import requests
 import urllib3
 from typeguard import typechecked
@@ -111,6 +112,7 @@ def make_request_based_on_input(
         if request_method == HttpRequestMethod.GET:
             logging.debug('Doing a %s request', request_method.name)
             response = requests.get(url,
+                                    headers={'Content-Type': request_settings.content_type},
                                     proxies=request_settings.proxy,
                                     timeout=10,
                                     verify=request_settings.ssl,
@@ -118,6 +120,7 @@ def make_request_based_on_input(
         elif request_method == HttpRequestMethod.PATCH:
             logging.debug('Doing a %s request', request_method.name)
             response = requests.patch(url,
+                                      headers={'Content-Type': request_settings.content_type},
                                       json=request_settings.body,
                                       timeout=20,
                                       proxies=request_settings.proxy,
@@ -126,6 +129,7 @@ def make_request_based_on_input(
         elif request_method == HttpRequestMethod.PUT:
             logging.debug('Doing a %s request', request_method.name)
             response = requests.put(url,
+                                    headers={'Content-Type': request_settings.content_type},
                                     json=request_settings.body,
                                     timeout=5,
                                     proxies=request_settings.proxy,
@@ -134,7 +138,9 @@ def make_request_based_on_input(
         elif request_method == HttpRequestMethod.POST:
             logging.debug('Doing a %s request', request_method.name)
             response = requests.post(url,
+                                     headers={'Content-Type': request_settings.content_type},
                                      json=request_settings.body,
+                                     data=request_settings.data,
                                      timeout=20,
                                      proxies=request_settings.proxy,
                                      verify=request_settings.ssl,
@@ -142,6 +148,7 @@ def make_request_based_on_input(
         elif request_method == HttpRequestMethod.DELETE:
             logging.debug('Doing a %s request', request_method.name)
             response = requests.delete(url,
+                                       headers={'Content-Type': request_settings.content_type},
                                        timeout=10,
                                        proxies=request_settings.proxy,
                                        verify=request_settings.ssl)

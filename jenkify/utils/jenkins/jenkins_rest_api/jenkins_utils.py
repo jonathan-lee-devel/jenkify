@@ -1,4 +1,6 @@
 """Jenkins utilities module"""
+import json
+from collections import OrderedDict
 from collections.abc import Callable
 from urllib.parse import urlencode
 
@@ -99,6 +101,49 @@ class JenkinsUtils:
                 self._jenkins_request_settings.max_retry,
                 HttpRequestSettings(auth=self._jenkins_request_settings.auth))
             return response_dict
+        except RequestRetryException:
+            return None
+
+    @typechecked
+    def query_jenkins_job_for_user_input(self,
+                                         url_end: str,
+                                         build_number: int) -> dict | None:
+        JsonUtils.validate_max_retry(self._jenkins_request_settings.max_retry)
+        try:
+            response_dict = self._get_json_response(
+                f'{self._jenkins_request_settings.url}/{url_end}/{build_number}'
+                '/wfapi/nextPendingInputAction',
+                self._jenkins_request_settings.max_retry,
+                HttpRequestSettings(auth=self._jenkins_request_settings.auth)
+            )
+            return response_dict
+        except RequestRetryException:
+            return None
+
+    @typechecked
+    def simulate_jenkins_job_user_input(self,
+                                        url_end: str,
+                                        build_number: int,
+                                        user_input_id: str,
+                                        user_input: list) -> Response | None:
+        JsonUtils.validate_max_retry(self._jenkins_request_settings.max_retry)
+        user_input_params_list: list = []
+        for user_input_element in user_input:
+            for param_value in user_input_element.get('params', []):
+                name = param_value.get('name', None)
+                value = param_value.get('value', None)
+                user_input_params_list.append({'name': name, 'value': value})
+
+        try:
+            response = request_retry(HttpRequestMethod.POST,
+                                     f'{self._jenkins_request_settings.url}/{url_end}/{build_number}/wfapi/inputSubmit?{urlencode(OrderedDict(inputId=user_input_id))}',
+                                     self._jenkins_request_settings.max_retry,
+                                     HttpRequestSettings(auth=self._jenkins_request_settings.auth,
+                                                         content_type='application/x-www-form-urlencoded',
+                                                         data={'json': {
+                                                             json.dumps({'parameter': user_input_params_list})}})
+                                     )
+            return response
         except RequestRetryException:
             return None
 
