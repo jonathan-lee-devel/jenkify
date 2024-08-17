@@ -1,0 +1,50 @@
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage("Docker Pull Image") {
+            steps {
+                script {
+                    sh 'docker pull --platform=linux/x86_64 jonathanleedev/jenkify:latest'
+                }
+            }
+        }
+
+        stage("Docker Run Help") {
+            steps {
+                script {
+                    sh 'docker run --rm jonathanleedev/jenkify:latest --help'
+                }
+            }
+        }
+
+        stage("Docker Run Example-Output Success") {
+            steps {
+                script {
+                    sh 'docker run --rm jonathanleedev/jenkify:latest example-output'
+                }
+            }
+        }
+
+        //stage("Docker Run Example-Output Failure") {
+        //    steps {
+        //        script {
+        //            sh 'docker run --rm jonathanleedev/jenkify:latest example-output --with-failure'
+        //        }
+        //    }
+        //}
+
+        stage("Docker Run wfapi Example Command") {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'jenkins-local-self-access', usernameVariable: 'JENKINS_USER', passwordVariable: 'JENKINS_TOKEN')]) {
+                        sh 'docker run -e JENKINS_URL="https://1d33-86-44-9-90.ngrok-free.app" -e JENKINS_USER=${JENKINS_USER} -e JENKINS_TOKEN=${JENKINS_TOKEN} --network host --rm jonathanleedev/jenkify:latest get-run-count --job-name User_Input_Job'
+                    }
+                }
+            }
+        }
+
+    }
+}

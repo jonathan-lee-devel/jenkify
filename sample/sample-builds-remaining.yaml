@@ -1,0 +1,5 @@
+build:
+  hosts:
+  - jobs:
+    - end: job/SomeOtherJob
+    url: http://localhost:8080
