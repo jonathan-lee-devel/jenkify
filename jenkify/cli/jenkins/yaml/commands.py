@@ -43,12 +43,16 @@ class YamlCommands(ABC):
         logging.info('Parsing YAML: %s...', build_jobs_yaml)
         successful_jobs = []
         failed_jobs = []
-        with open(build_jobs_yaml, 'r', encoding='utf-8') as yaml_file_contents:
-            build_jobs_dict = yaml.safe_load(yaml_file_contents)
-            for build_host_index, build_host in enumerate(build_jobs_dict[BUILD][HOSTS]):
-                jobs_info_dict: dict = process_build_host(build_host)
-                successful_jobs.append(jobs_info_dict[SUCCESSFUL_JOBS])
-                failed_jobs.append(jobs_info_dict[FAILED_JOBS])
+        try:
+            with open(build_jobs_yaml, 'r', encoding='utf-8') as yaml_file_contents:
+                build_jobs_dict = yaml.safe_load(yaml_file_contents)
+                for build_host_index, build_host in enumerate(build_jobs_dict[BUILD][HOSTS]):
+                    jobs_info_dict: dict = process_build_host(build_host)
+                    successful_jobs.append(jobs_info_dict[SUCCESSFUL_JOBS])
+                    failed_jobs.append(jobs_info_dict[FAILED_JOBS])
+        except FileNotFoundError:
+            logging.fatal("Could not load file: %s", build_jobs_yaml)
+            sys.exit(1)
 
         logging.info('Run of %s completed:', build_jobs_yaml)
         logging.debug('Successful builds: %s', jobs_info_dict[SUCCESSFUL_JOBS])
@@ -59,17 +63,21 @@ class YamlCommands(ABC):
         for build_host in tracking_build_jobs_dict[BUILD][HOSTS]:
             build_host['jobs'] = list(filter(lambda job: job.get('build-index', -1) != -1, build_host['jobs']))
 
-        with open(tracking_output_filename, 'w', encoding='utf-8') as output_file:
-            yaml.dump(tracking_build_jobs_dict, output_file)
-        if len(jobs_info_dict[FAILED_JOBS]) > 0:
-            logging.debug('Failed builds: %s', jobs_info_dict[FAILED_JOBS])
-            for build_host_index, build_host in enumerate(remaining_build_jobs_dict[BUILD][HOSTS]):
-                failed_jobs_dict = list(filter(lambda job: job.get('build-index', -1) == -1, build_host['jobs']))
-                remaining_build_jobs_dict[BUILD][HOSTS][build_host_index]['jobs'] = failed_jobs_dict
-            output_file_name = build_jobs_yaml.replace('.yaml', '-remaining.yaml')
-            logging.info('Outputting remaining (failed) jobs to %s...', output_file_name)
-            with open(output_file_name, 'w', encoding='utf-8') as output_file:
-                yaml.dump(remaining_build_jobs_dict, output_file)
+        try:
+            with open(tracking_output_filename, 'w', encoding='utf-8') as output_file:
+                yaml.dump(tracking_build_jobs_dict, output_file)
+            if len(jobs_info_dict[FAILED_JOBS]) > 0:
+                logging.debug('Failed builds: %s', jobs_info_dict[FAILED_JOBS])
+                for build_host_index, build_host in enumerate(remaining_build_jobs_dict[BUILD][HOSTS]):
+                    failed_jobs_dict = list(filter(lambda job: job.get('build-index', -1) == -1, build_host['jobs']))
+                    remaining_build_jobs_dict[BUILD][HOSTS][build_host_index]['jobs'] = failed_jobs_dict
+                output_file_name = build_jobs_yaml.replace('.yaml', '-remaining.yaml')
+                logging.info('Outputting remaining (failed) jobs to %s...', output_file_name)
+                with open(output_file_name, 'w', encoding='utf-8') as output_file:
+                    yaml.dump(remaining_build_jobs_dict, output_file)
+        except FileNotFoundError:
+            logging.fatal("Could not load file: %s", build_jobs_yaml)
+            sys.exit(1)
 
         logging_line_break()
 
@@ -95,12 +103,17 @@ class YamlCommands(ABC):
                               validation_error.message)
             sys.exit(1)
         logging.info('Successfully validated tracking builds jobs YAML: %s!', build_jobs_tracking_yaml)
-        with open(build_jobs_tracking_yaml, 'r', encoding='utf-8') as build_jobs_tracking_file:
-            build_jobs_tracking_dict = yaml.safe_load(build_jobs_tracking_file)
-            logging.info('Tracking builds asynchronously...')
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(track_multiple_build_job_statuses(build_jobs_tracking_dict))
-            loop.close()
-        with open(build_jobs_tracking_yaml, 'w', encoding='utf-8') as build_jobs_tracking_file:
-            yaml.dump(build_jobs_tracking_dict, build_jobs_tracking_file)
+        try:
+            with open(build_jobs_tracking_yaml, 'r', encoding='utf-8') as build_jobs_tracking_file:
+                build_jobs_tracking_dict = yaml.safe_load(build_jobs_tracking_file)
+                logging.info('Tracking builds asynchronously...')
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(track_multiple_build_job_statuses(build_jobs_tracking_dict))
+                loop.close()
+            with open(build_jobs_tracking_yaml, 'w', encoding='utf-8') as build_jobs_tracking_file:
+                yaml.dump(build_jobs_tracking_dict, build_jobs_tracking_file)
+        except FileNotFoundError:
+            logging.fatal("Could not load file: %s", build_jobs_tracking_yaml)
+            sys.exit(1)
+
         logging.info('Wrote statuses to %s', build_jobs_tracking_yaml)
