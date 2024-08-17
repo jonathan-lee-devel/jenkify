@@ -3,6 +3,7 @@ build:
   - jobs:
     - build-index: 126
       end: job/TestJob
+      status: UNKNOWN
     - build-index: 110
       build-parameters:
       - name: GIT_BRANCH
@@ -10,8 +11,11 @@ build:
       - name: DEPLOY_TO_PROD
         value: 'false'
       end: job/AnotherTestJob
+      status: UNKNOWN
     - build-index: 100
       end: job/LongRunningJob
+      status: UNKNOWN
     - build-index: 37
       end: job/User_Input_Job
+      status: UNKNOWN
     url: http://localhost:8080

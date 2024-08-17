@@ -101,6 +101,7 @@ disable=
     missing-docstring,
     protected-access,
     too-few-public-methods,
+    redefined-variable-type
     # handled by black
     format,
     # We anticipate #3512 where it will become optional

@@ -94,10 +94,11 @@ async def poll_jenkins_job_for_desirable_status(jenkins_request_settings: Jenkin
                 (none_responses_count + 1))
             await log_and_sleep(int(os.getenv('POLL_RATE_SECONDS')))
         elif response_dict['result'] == 'SUCCESS':
-            handle_success_status(url_end, build_number)
+            # pylint: disable=redefined-variable-type
+            jenkins_job_status = handle_success_status(url_end, build_number)
             break
         elif response_dict['result'] == 'UNSTABLE':
-            handle_unstable_status(url_end, build_number)
+            jenkins_job_status = handle_unstable_status(url_end, build_number)
             break
         elif response_dict['result'] == 'UNKNOWN':
             unknown_responses_count += 1
@@ -113,6 +114,7 @@ async def poll_jenkins_job_for_desirable_status(jenkins_request_settings: Jenkin
                 (unknown_responses_count + 1))
             await log_and_sleep(int(os.getenv('POLL_RATE_SECONDS')))
         elif response_dict['result'] == 'FAILURE':
+            jenkins_job_status = JenkinsJobStatus.FAILURE
             logging.error('Result of %s #%s'
                           'is %s, stopping polling!',
                           url_end,
@@ -120,6 +122,7 @@ async def poll_jenkins_job_for_desirable_status(jenkins_request_settings: Jenkin
                           JenkinsJobStatus.FAILURE)
             break
         elif response_dict['result'] == 'ABORTED':
+            jenkins_job_status = JenkinsJobStatus.ABORTED
             logging.error('Result of %s #%s'
                           'is %s, stopping polling!',
                           url_end,
@@ -144,29 +147,31 @@ async def poll_jenkins_job_for_desirable_status(jenkins_request_settings: Jenkin
 async def log_and_sleep(seconds: int):
     logging.info('Sleeping for %s seconds...', seconds)
     await asyncio.sleep(seconds)
-    logging_line_break()
 
 
 @typechecked
-def handle_success_status(url_end: str, build_number: int):
+def handle_success_status(url_end: str, build_number: int) -> JenkinsJobStatus:
     logging.debug('Result of %s #%s is'
                   '%s, stopping polling!',
                   url_end,
                   build_number,
                   JenkinsJobStatus.SUCCESS)
+    return JenkinsJobStatus.SUCCESS
 
 
 @typechecked
-def handle_unstable_status(url_end: str, build_number: int):
+def handle_unstable_status(url_end: str, build_number: int) -> JenkinsJobStatus:
     logging.debug('Result of %s #%s is '
                   '%s, stopping polling!',
                   url_end,
                   build_number,
                   JenkinsJobStatus.UNSTABLE)
+    return JenkinsJobStatus.UNSTABLE
 
 
 @typechecked
-def handle_unknown_status_limit_reached(url_end: str, build_number: int, unknown_responses_count: int):
+def handle_unknown_status_limit_reached(url_end: str, build_number: int,
+                                        unknown_responses_count: int) -> JenkinsJobStatus:
     logging.debug('UNKNOWN for %s #%s %s',
                   url_end,
                   build_number,
@@ -179,6 +184,7 @@ def handle_unknown_status_limit_reached(url_end: str, build_number: int, unknown
         build_number,
         jenkins_job_status,
         unknown_responses_count)
+    return jenkins_job_status
 
 
 @typechecked

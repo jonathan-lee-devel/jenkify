@@ -136,7 +136,9 @@ class JenkinsUtils:
 
         try:
             response = request_retry(HttpRequestMethod.POST,
-                                     f'{self._jenkins_request_settings.url}/{url_end}/{build_number}/wfapi/inputSubmit?{urlencode(OrderedDict(inputId=user_input_id))}',
+                                     f'{self._jenkins_request_settings.url}/{url_end}/{build_number}'
+                                     f'/wfapi/inputSubmit?'
+                                     f'{urlencode(OrderedDict(inputId=user_input_id))}',
                                      self._jenkins_request_settings.max_retry,
                                      HttpRequestSettings(auth=self._jenkins_request_settings.auth,
                                                          content_type='application/x-www-form-urlencoded',
@@ -189,7 +191,9 @@ class JenkinsUtils:
         query_string = f'?{urlencode(build_parameters)}' if build_parameters else ''
         try:
             status_code = request_retry(HttpRequestMethod.POST,
-                                        f'{initial_url}/{'build' if query_string == '' else 'buildWithParameters'}{query_string}',
+                                        f'{initial_url}/'
+                                        f'{'build' if query_string == '' else 'buildWithParameters'}'
+                                        f'{query_string}',
                                         self._jenkins_request_settings.max_retry,
                                         HttpRequestSettings(auth=self._jenkins_request_settings.auth)
                                         ).status_code
