@@ -7,6 +7,7 @@ from abc import ABC
 
 import click
 import yaml
+from click import FileError
 from dotenv import load_dotenv
 from typeguard import typechecked
 
@@ -50,8 +51,8 @@ class YamlCommands(ABC):
                     jobs_info_dict: dict = process_build_host(build_host)
                     successful_jobs.append(jobs_info_dict[SUCCESSFUL_JOBS])
                     failed_jobs.append(jobs_info_dict[FAILED_JOBS])
-        except FileNotFoundError:
-            logging.fatal("Could not load file: %s", build_jobs_yaml)
+        except FileError as exception:
+            logging.fatal("Could not load file: %s -> %s", build_jobs_yaml, exception.message)
             sys.exit(1)
 
         logging.info('Run of %s completed:', build_jobs_yaml)
@@ -75,8 +76,8 @@ class YamlCommands(ABC):
                 logging.info('Outputting remaining (failed) jobs to %s...', output_file_name)
                 with open(output_file_name, 'w', encoding='utf-8') as output_file:
                     yaml.dump(remaining_build_jobs_dict, output_file)
-        except FileNotFoundError:
-            logging.fatal("Could not load file: %s", build_jobs_yaml)
+        except FileError as exception:
+            logging.fatal("Could not load file: %s -> %s", build_jobs_yaml, exception.message)
             sys.exit(1)
 
         logging_line_break()
@@ -112,8 +113,8 @@ class YamlCommands(ABC):
                 loop.close()
             with open(build_jobs_tracking_yaml, 'w', encoding='utf-8') as build_jobs_tracking_file:
                 yaml.dump(build_jobs_tracking_dict, build_jobs_tracking_file)
-        except FileNotFoundError:
-            logging.fatal("Could not load file: %s", build_jobs_tracking_yaml)
+        except FileError as exception:
+            logging.fatal("Could not load file: %s -> %s", build_jobs_tracking_yaml, exception.message)
             sys.exit(1)
 
         logging.info('Wrote statuses to %s', build_jobs_tracking_yaml)
