@@ -42,7 +42,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'jenkins-local-self-access', usernameVariable: 'JENKINS_USER', passwordVariable: 'JENKINS_TOKEN')]) {
-                        sh 'docker run -e JENKINS_URL="https://8537-2001-bb6-7b45-7100-89ed-a80a-3a36-f686.ngrok-free.app" -e JENKINS_USER=${JENKINS_USER} -e JENKINS_TOKEN=${JENKINS_TOKEN} --network host -v $(pwd)/sample:/tmp/sample --rm jonathanleedev/jenkify:latest start-build-jobs-yaml --build-jobs-yaml /tmp/sample/sample-builds.yaml'
+                        sh 'docker run -e JENKINS_URL="https://8537-2001-bb6-7b45-7100-89ed-a80a-3a36-f686.ngrok-free.app" -e JENKINS_USER=${JENKINS_USER} -e JENKINS_TOKEN=${JENKINS_TOKEN} -e POLL_RATE_SECONDS=10 --network host -v $(pwd)/sample:/tmp/sample --rm jonathanleedev/jenkify:latest start-build-jobs-yaml --build-jobs-yaml /tmp/sample/sample-builds.yaml'
                     }
                 }
             }
@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'jenkins-local-self-access', usernameVariable: 'JENKINS_USER', passwordVariable: 'JENKINS_TOKEN')]) {
-                        sh 'docker run -e JENKINS_URL="https://8537-2001-bb6-7b45-7100-89ed-a80a-3a36-f686.ngrok-free.app" -e JENKINS_USER=${JENKINS_USER} -e JENKINS_TOKEN=${JENKINS_TOKEN} --network host -v $(pwd)/sample:/tmp/sample --rm jonathanleedev/jenkify:latest track-build-jobs-status --build-jobs-tracking-yaml /tmp/sample/sample-builds-tracking.yaml'
+                        sh 'docker run -e JENKINS_URL="https://8537-2001-bb6-7b45-7100-89ed-a80a-3a36-f686.ngrok-free.app" -e JENKINS_USER=${JENKINS_USER} -e JENKINS_TOKEN=${JENKINS_TOKEN} -e POLL_RATE_SECONDS=10 --network host -v $(pwd)/sample:/tmp/sample --rm jonathanleedev/jenkify:latest track-build-jobs-status --build-jobs-tracking-yaml /tmp/sample/sample-builds-tracking.yaml'
                     }
                 }
             }
